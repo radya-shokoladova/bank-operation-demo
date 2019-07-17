@@ -1,18 +1,17 @@
 package com.shokoladova.bank_operations;
 
+import java.sql.SQLException;
 import java.util.UUID;
 
 public interface BankAccountService {
 
-    BankAccount create(String cardholderName, Integer initialBalance);
+    BankAccount create(String cardholderName, Integer initialBalance) throws SQLException;
 
-    BankAccount create(String cardholderName);
+    BankAccount get(UUID id) throws SQLException;
 
-    BankAccount get(UUID id);
+    BankAccount withdraw(UUID id, Integer amount) throws SQLException;
 
-    BankAccount withdraw(UUID id, Integer amount);
+    BankAccount deposit(UUID id, Integer amount) throws SQLException;
 
-    BankAccount deposit(UUID id, Integer amount);
-
-    boolean transfer(TransferRequest transferRequest);
+    boolean transfer(TransferRequest transferRequest) throws SQLException;
 }

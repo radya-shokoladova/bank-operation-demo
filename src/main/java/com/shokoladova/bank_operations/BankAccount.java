@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-@DatabaseTable
+@DatabaseTable(tableName = "ACCOUNT")
 public class BankAccount {
 
     @DatabaseField(generatedId = true)
@@ -16,7 +16,7 @@ public class BankAccount {
     @DatabaseField
     private String cardholderName;
 
-    @DatabaseField
+    @DatabaseField(columnDefinition = "BIGINT CHECK BALANCE >= 0")
     private Integer balance;
 
     public BankAccount(String cardholderName, Integer initialBalance) {

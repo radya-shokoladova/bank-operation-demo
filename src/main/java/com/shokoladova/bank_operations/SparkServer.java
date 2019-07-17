@@ -1,26 +1,22 @@
 package com.shokoladova.bank_operations;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import spark.Spark;
 
-import java.sql.SQLException;
 import java.util.Optional;
-import java.util.UUID;
 
 import static spark.Spark.*;
 
 public class SparkServer {
 
-    public void start() throws SQLException {
+    public void start() {
         initPort();
         init();
         awaitInitialization();
         initRoutes();
     }
 
-    private void initRoutes() throws SQLException {
-        BankAccountService bankAccountService = new BankAccountServiceImpl();
-        ObjectMapper mapper = new ObjectMapper();
+    private void initRoutes() {
+        BankAccountFacade facade = new BankAccountFacadeImpl();
 
         post("/stop", (req, res) -> {
             this.stop();
@@ -29,27 +25,13 @@ public class SparkServer {
 
         path("/account", () -> {
 
-            post("", (req, res) -> {
-                String name = req.queryParams("cardholderName");
-                Optional<Integer> balance = Optional.ofNullable(req.queryParams("balance"))
-                        .map(Integer::parseInt);
-                return balance.isPresent() ?
-                        bankAccountService.create(name, balance.get()):
-                        bankAccountService.create(name);
-            });
+            post("", (req, res) -> facade.create(req));
             get("", (req, res) -> {
-                UUID id = UUID.fromString(req.queryParams("id"));
-                return bankAccountService.get(id);
+                return facade.req(req);
             });
-            post("/withdraw", (req, res) -> {
-                String id = req.queryParams("id");
-                Integer amount = Integer.valueOf(req.queryParams("amount"));
-                return bankAccountService.withdraw(UUID.fromString(id), amount);
-            });
-            post("/transfer", (req, res) -> {
-                TransferRequest transferRequest = mapper.readValue(req.body(), TransferRequest.class);
-                return bankAccountService.transfer(transferRequest);
-            });
+            post("/withdraw", (req, res) -> facade.withdraw(req));
+            post("/transfer", (req, res) -> facade.transfer(req));
+            post("/deposit", (req, res) -> facade.deposit(req));
         });
 
 
