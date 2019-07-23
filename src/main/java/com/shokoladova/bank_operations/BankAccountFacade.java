@@ -8,7 +8,7 @@ public interface BankAccountFacade {
 
     BankOperationResultDto create(Request req);
 
-    BankOperationResultDto req(Request req);
+    BankOperationResultDto get(Request req);
 
     BankOperationResultDto withdraw(Request req);
 

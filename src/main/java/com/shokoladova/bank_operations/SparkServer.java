@@ -1,14 +1,15 @@
 package com.shokoladova.bank_operations;
 
-import spark.Spark;
 
 import java.util.Optional;
 
 import static spark.Spark.*;
 
-public class SparkServer {
+class SparkServer {
 
-    public void start() {
+    private final BankAccountFacade facade = new BankAccountFacadeImpl();
+
+    void start() {
         initPort();
         init();
         awaitInitialization();
@@ -16,19 +17,11 @@ public class SparkServer {
     }
 
     private void initRoutes() {
-        BankAccountFacade facade = new BankAccountFacadeImpl();
-
-        post("/stop", (req, res) -> {
-            this.stop();
-            return true;
-        });
 
         path("/account", () -> {
 
             post("", (req, res) -> facade.create(req));
-            get("", (req, res) -> {
-                return facade.req(req);
-            });
+            get("", (req, res) -> facade.get(req));
             post("/withdraw", (req, res) -> facade.withdraw(req));
             post("/transfer", (req, res) -> facade.transfer(req));
             post("/deposit", (req, res) -> facade.deposit(req));
@@ -42,10 +35,5 @@ public class SparkServer {
                 .map(Integer::parseInt)
                 .orElse(8080);
         port(port);
-    }
-
-    public void stop() {
-        Spark.stop();
-        System.exit(1);
     }
 }

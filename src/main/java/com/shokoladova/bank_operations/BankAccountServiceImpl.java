@@ -16,10 +16,9 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     private final Dao<BankAccount, UUID> accountDao;
 
-    public BankAccountServiceImpl()  {
-        JdbcPooledConnectionSource source = null;
+    BankAccountServiceImpl() {
         try {
-            source = getConnectionSource();
+            JdbcPooledConnectionSource source = getConnectionSource();
             accountDao = DaoManager.createDao(source, BankAccount.class);
             TableUtils.createTableIfNotExists(source, BankAccount.class);
         } catch (SQLException e) {
@@ -38,6 +37,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
         BankAccount account = new BankAccount(cardholderName, initialBalance);
         accountDao.create(account);
+
         return account;
     }
 
@@ -50,6 +50,8 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public BankAccount withdraw(UUID id, Integer amount) throws SQLException {
+        validateAccountExists(id);
+
         if (amount <= 0) {
             throw new MoneyOperationException("Can not withdraw non-positive value");
         }
@@ -64,6 +66,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public BankAccount deposit(UUID id, Integer amount) throws SQLException {
+        validateAccountExists(id);
         if (amount <= 0) {
             throw new MoneyOperationException("Can not deposit non-positive value");
         }
@@ -78,6 +81,8 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     public boolean transfer(TransferRequest transferRequest) throws SQLException {
+        validateAccountExists(transferRequest.getSourceId());
+        validateAccountExists(transferRequest.getDestinationId());
         if (transferRequest.getAmount() <= 0) {
             throw new MoneyOperationException("Can not transfer non-positive value");
         }
@@ -85,9 +90,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         UUID sourceId = transferRequest.getSourceId();
         UUID destinationId = transferRequest.getDestinationId();
 
-        if (!accountDao.idExists(sourceId) || !accountDao.idExists(destinationId)) {
-            throw new BankAccountNotFountException(format("One of selected accounts does not exists: %s %s", sourceId, destinationId));
-        }
         callInTransaction(getConnectionSource(), () -> {
             BankAccount sourceAccount = accountDao.queryRaw("SELECT * FROM ACCOUNT WHERE ID=? FOR UPDATE", accountDao.getRawRowMapper(), sourceId.toString()).getFirstResult();
             Integer sourceAccountBalance = sourceAccount.getBalance();
@@ -100,5 +102,11 @@ public class BankAccountServiceImpl implements BankAccountService {
         });
 
         return true;
+    }
+
+    private void validateAccountExists(UUID id) throws SQLException {
+        if (!accountDao.idExists(id)) {
+            throw new BankAccountNotFountException(format("Could not find account with id = %s", id));
+        }
     }
 }

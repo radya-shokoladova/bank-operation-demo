@@ -25,33 +25,22 @@ public class BankAccountFacadeImpl implements BankAccountFacade {
                     bankAccountService.create(name, balance.get()):
                     bankAccountService.create(name, 0);
 
-            return BankOperationResultDto.builder()
-                    .result(bankAccount)
-                    .status(OK)
-                    .build();
+            return buildSuccessfullResult(bankAccount);
         } catch (Exception e) {
-            return BankOperationResultDto.builder()
-                    .status(NE_OK)
-                    .error(e)
-                    .build();
+            return buildErrorResult(e);
         }
     }
 
 
     @Override
-    public BankOperationResultDto req(Request req) {
+    public BankOperationResultDto get(Request req) {
         try {
             UUID id = UUID.fromString(req.queryParams("id"));
             BankAccount bankAccount = bankAccountService.get(id);
-            return BankOperationResultDto.builder()
-                    .result(bankAccount)
-                    .status(OK)
-                    .build();
+
+            return buildSuccessfullResult(bankAccount);
         } catch (Exception e) {
-            return BankOperationResultDto.builder()
-                    .status(NE_OK)
-                    .error(e)
-                    .build();
+            return buildErrorResult(e);
         }
     }
 
@@ -61,15 +50,10 @@ public class BankAccountFacadeImpl implements BankAccountFacade {
             UUID id = UUID.fromString(req.queryParams("id"));
             Integer amount = Integer.valueOf(req.queryParams("amount"));
             BankAccount bankAccount = bankAccountService.withdraw(id, amount);
-            return BankOperationResultDto.builder()
-                    .result(bankAccount)
-                    .status(OK)
-                    .build();
+
+            return buildSuccessfullResult(bankAccount);
         } catch (Exception e) {
-            return BankOperationResultDto.builder()
-                    .status(NE_OK)
-                    .error(e)
-                    .build();
+            return buildErrorResult(e);
         }
     }
 
@@ -79,15 +63,10 @@ public class BankAccountFacadeImpl implements BankAccountFacade {
             UUID id = UUID.fromString(req.queryParams("id"));
             int amount = Integer.parseInt(req.queryParams("amount"));
             BankAccount bankAccount = bankAccountService.deposit(id, amount);
-            return BankOperationResultDto.builder()
-                    .result(bankAccount)
-                    .status(OK)
-                    .build();
+
+            return buildSuccessfullResult(bankAccount);
         } catch (Exception e) {
-            return BankOperationResultDto.builder()
-                    .status(NE_OK)
-                    .error(e)
-                    .build();
+            return buildErrorResult(e);
         }
     }
 
@@ -96,15 +75,24 @@ public class BankAccountFacadeImpl implements BankAccountFacade {
         try {
             TransferRequest transferRequest = mapper.readValue(req.body(), TransferRequest.class);
             boolean trasnfered = bankAccountService.transfer(transferRequest);
-            return BankOperationResultDto.builder()
-                    .result(trasnfered)
-                    .status(OK)
-                    .build();
+
+            return buildSuccessfullResult(trasnfered);
         } catch (Exception e) {
-            return BankOperationResultDto.builder()
-                    .status(NE_OK)
-                    .error(e)
-                    .build();
+            return buildErrorResult(e);
         }
+    }
+
+    private BankOperationResultDto buildSuccessfullResult(Object result) {
+        return BankOperationResultDto.builder()
+                .result(result)
+                .status(OK)
+                .build();
+    }
+
+    private BankOperationResultDto buildErrorResult(Exception e) {
+        return BankOperationResultDto.builder()
+                .status(NE_OK)
+                .error(e)
+                .build();
     }
 }
